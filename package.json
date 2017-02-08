@@ -1,0 +1,26 @@
+{
+  "name": "boleta-entel-checker",
+  "version": "0.1",
+  "description": "A sample Node.js app using Express 4",
+  "engines": {
+    "node": "6.9.5"
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "ejs": "2.5.5",
+    "express": "4.14.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mbustamanteo/BoletaEntelChecker"
+  },
+  "keywords": [
+    "node",
+    "heroku",
+    "express"
+  ],
+  "license": "MIT"
+}
