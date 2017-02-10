@@ -10,8 +10,12 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "ejs": "2.5.5",
-    "express": "4.14.1"
+    "async": "^2.1.4",
+    "body-parser": "^1.16.0",
+    "express": "4.14.1",
+    "express-handlebars": "^3.0.0",
+    "handlebars": "^4.0.6",
+    "nightmare": "2.9.1"
   },
   "repository": {
     "type": "git",

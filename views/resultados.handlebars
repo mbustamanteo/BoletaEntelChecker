@@ -1,0 +1,25 @@
+<div class="container">
+    <div class="row"> 
+        <div class="col-md-6 offset-md-3">
+
+          <table class="table">
+            <thead class="thead-default">
+              <tr>
+                <th>RUT</th>
+                <th>Nº boletas impagas</th>
+                <th>Fecha vencimiento</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#entradas}}
+              <tr>
+                <td>{{rut}}</td>
+                <td>{{cantidad}}</td>
+                <td>{{fechas}}</td>
+              </tr>
+              {{/entradas}}
+            </tbody>
+          </table>
+        </div>
+    </div>
+</div>
