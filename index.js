@@ -71,7 +71,7 @@ function getBoletasImpagas(ruts, callback) {
 
     //console.log("Buscando boletas de ruts: " + JSON.stringify(ruts));
 
-    var nightmare = Nightmare({ show: false });
+    var nightmare = Nightmare({ show: false, electronPath: require('electron-prebuilt') });
     var operations = nightmare.goto('https://www.servipag.com/').wait('input#identificador');
 
     ruts.forEach(function(rut) {
