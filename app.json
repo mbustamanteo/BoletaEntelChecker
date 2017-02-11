@@ -1,7 +1,0 @@
-{
-    "name" : "BoletaEntelChecker",
-    "description" : "Comprueba si los ruts ingresados tienen boletas pendientes en Servipag",
-    "repository" : "https://github.com/mbustamanteo/BoletaEntelChecker",
-    "keywords" : ["node", "express", "static"],
-    "image" : "heroku/nodejs"
-}

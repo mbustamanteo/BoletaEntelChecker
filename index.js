@@ -1,27 +1,11 @@
-var express = require('express');
-var exphbs  = require('express-handlebars');
-var app = express();
-var bodyParser = require('body-parser');
 var async = require('async');
 var Nightmare = require('nightmare');   
 
-
-app.engine('handlebars', exphbs({defaultLayout: 'main'}));
-app.set('view engine', 'handlebars');
-app.set('port', (process.env.PORT || 5000));
-app.use(express.static(__dirname + '/public'));
-app.use(bodyParser.urlencoded({ extended: true })); 
-app.set('views', __dirname + '/views');
-
-app.get('/', function(request, response) {
-    response.render('index');
-});
-
-app.post('/boletas', function(request, response) {
-    var ruts = request.body.ruts;
+exports.handler = function(event, context, lambda_callback) {
+    var ruts = event.ruts;
     
     if (ruts == null) {
-        response.status(400).send('no hay ruts');
+        lambda_callback('no hay ruts');
         return
     }
 
@@ -29,7 +13,6 @@ app.post('/boletas', function(request, response) {
     var pedazos = [];
     var tamano = 20;
 
-    // dividir en pedazos de 15
     for(var i = 0; i < ruts.length; i += tamano) {
         pedazos.push(ruts.slice(i, i+tamano));
     }
@@ -42,36 +25,33 @@ app.post('/boletas', function(request, response) {
             if (err == null) {
                 //console.log("Agregando boletas: " + JSON.stringify(boletasImpagas, null, 4));
                 console.log("Agregando " + boletasImpagas.length + " boletas")
-                return callback(null, boletasImpagas);
+                callback(null, boletasImpagas);
             }
-            console.log("getBoletasImpagas err: " + err);
-            callback(err, []);
+            else {
+                console.log("getBoletasImpagas err: " + err);
+                callback(err, []);
+            }
         });
     }, function(err, entradas) {
         if (err == null ){
             //console.log(JSON.stringify(entradas, null, 4))
             var consolidado = [].concat.apply([],entradas);
             console.log("Exito. Entradas consolidadas:" + consolidado.length);
-            console.log(JSON.stringify(consolidado));
-            response.render('resultados', {'entradas': consolidado});
+            //console.log(JSON.stringify(consolidado));
+            lambda_callback(null, consolidado);
         }
         else {
-            response.status(500).send('error');
+            lambda_callback(err);
         }
     });
-});
 
-app.listen(app.get('port'), function() {
-    console.log('Node app BEC is running on port', app.get('port'))
-});
-
-
+    console.log("wating . . .");
+}
 
 function getBoletasImpagas(ruts, callback) {   
 
-    //console.log("Buscando boletas de ruts: " + JSON.stringify(ruts));
-
-    var nightmare = Nightmare({ show: false, electronPath: require('electron-prebuilt') });
+    console.log("Buscando boletas de ruts: " + JSON.stringify(ruts));
+    var nightmare = Nightmare({ show: false });
     var operations = nightmare.goto('https://www.servipag.com/').wait('input#identificador');
 
     ruts.forEach(function(rut) {
