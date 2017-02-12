@@ -2,17 +2,28 @@
   "name": "boleta-entel-checker",
   "version": "0.1.0",
   "description": "A sample Node.js app using Express 4",
+  "private": true,
+  "engines": {
+    "node": ">=4.3.2"
+  },
+  "scripts": {
+    "preinstall": "apt-get update && apt-get install -y libgtk2.0-0 libgconf-2-4 libasound2 libxtst6 libxss1 libnss3 xvfb",
+    "start": "xvfb-run -a node app.js"
+  },
   "dependencies": {
     "async": "^2.1.4",
-    "nightmare": "2.9.1"
+    "nightmare": "2.9.1",
+    "body-parser": "^1.16.0",
+    "express": "4.14.1",
+    "express-handlebars": "^3.0.0",
+    "handlebars": "^4.0.6"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/mbustamanteo/BoletaEntelChecker"
   },
   "keywords": [
-    "node",
-    "lambda"
+    "node"
   ],
   "license": "MIT"
 }
