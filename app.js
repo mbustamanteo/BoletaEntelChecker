@@ -26,11 +26,10 @@ app.post('/boletas', function(request, response) {
         return
     }
 
-    ruts = ruts.trim().split(",");
+    ruts = ruts.trim().split(",").filter(function(n) { return (n != null && n.length > 0) });
     var pedazos = [];
     var tamano = 20;
 
-    // dividir en pedazos de 15
     for(var i = 0; i < ruts.length; i += tamano) {
         pedazos.push(ruts.slice(i, i+tamano));
     }
@@ -41,8 +40,7 @@ app.post('/boletas', function(request, response) {
     async.mapLimit(pedazos, 10, function(pedazo, callback) {
         getBoletasImpagas(pedazo, function(err, boletasImpagas) {
             if (err == null) {
-                //console.log("Agregando boletas: " + JSON.stringify(boletasImpagas, null, 4));
-                console.log("Agregando " + boletasImpagas['boletas'].length + " boletas")
+                console.log("Agregando boletas: " + JSON.stringify(boletasImpagas));
                 return callback(null, boletasImpagas);
             }
             console.log("getBoletasImpagas err: " + err);
@@ -78,108 +76,115 @@ app.listen(app.get('port'), function() {
 });
 
 
-
 function getBoletasImpagas(ruts, callback) {   
 
     console.log("Buscando boletas de ruts: " + JSON.stringify(ruts));
 
-    var nightmare = Nightmare({ show: false });
-    var operations = nightmare.goto('https://www.servipag.com/').wait('input#identificador');
+    var nightmare = new Nightmare({ show: false });
+    var operations = nightmare.goto('https://www.servipag.com/')
+        .wait('input#identificador')
+        .evaluate(function (ruts) {
+            // ingresamos el formulario de esta manera puesto que usando
+            // nightmarejs clickeando botones se vuelve muy poco confiable
+            // y la latencia con los servidores se vuelve un problema.
+            // Resultando en que algunos RUTs no eran enviados correctamente por el formulario
+            
+            var form = document.getElementById("formPagoCuentas");
+            var rutsForm = document.getElementById("array");
+            var tipoBusqueda = document.getElementById("TipoBusqueda");
+            var intTipoBusqueda = document.getElementById("IntTipoBusqueda");
+            var idAccionIdentificador = document.getElementById("idAccionIdentificador");
 
-    ruts.forEach(function(rut) {
-    operations = operations
-        .select('select#servicios.txt_formulario', '29')
-        .wait(200)
-        .select('select#billers', '700')
-        .insert('input#identificador',rut)
-        .click('#formPagoCuentas a[href^="javascript:AgregarCuentasaPagar"]')
-        .wait(10)
-    });
-
-    operations
-    .click('#formPagoCuentas a[href^="javascript:enviar"]')
-    .wait('fieldset')
-    .wait(50)
-    .evaluate(function (ruts) {
-        var fieldsets = document.querySelectorAll('fieldset');
-        var boletasImpagas = [];
-        var rutsInvalidos = [];
-        var fechaRegexp = new RegExp(/(\d{1,2})\/(\d{1,2})\/(\d{4})/)
-        
-        if (fieldsets == null) {
-            console.log("fieldsets null");
-        }
-        else {
-            console.log("Encontrados " + fieldsets.length + "fieldsets");
-        }
-        
-        fieldsets.forEach(function(fieldset) {
-            var rut = null;
-            var fecha = null;
-
-            fieldset.querySelectorAll('.txt_detalle_boleta').forEach(function(elem){
-                var val = elem.innerText.trim();
-
-                if (ruts.indexOf(val) != -1) {
-                    rut = val;
-                }
-                else if(fechaRegexp.test(val)) {
-                    fecha = val;
-                }
+            var formValues = [];
+            ruts.forEach(function(rut){
+                formValues.push("29,700," + rut);
             });
 
-            if (rut != null && fecha != null) {
-                // conseguir monto
-                var monto = 0;
+            rutsForm.value = formValues;
+            tipoBusqueda.value = "N";
+            IntTipoBusqueda.value = 0;
+            idAccionIdentificador = "P";
 
-                fieldset.querySelectorAll('.txt_detalle_boleta_bold').forEach(function(elem){
-                  var val = elem.innerText.trim();
-                  if (val.indexOf("$") != -1) {
-                      monto = Number(val.replace(/\D/g,''));
-                  }
-                });
+            form.submit();
 
-                boletasImpagas.push({'rut': rut, 'fecha': fecha, 'monto': monto});
-            }
-            else if (rut != null){
-              // si no encontramos boletas, quizas es invalido
-              fieldset.querySelectorAll('.txt_detalle_boleta_bold').forEach(function(elem){
-                  var val = elem.innerText.trim();
-                  if (val.indexOf("En estos momentos no es posible obtener la informacion") != -1) {
-                    rutsInvalidos.push(rut)
-                  }
-              });
-            }
-        });
-        return {'boletas': boletasImpagas, 'invalidos': rutsInvalidos};
-    }, ruts)
-    .end()
-    .then(function (result) {
-        console.log(result);
-        var entradas = [];
+        }, ruts)
+        .then(function() {
+            nightmare.wait('fieldset')
+                  .evaluate(function (ruts) {
+                      var fieldsets = document.querySelectorAll('fieldset');
+                      var boletasImpagas = [];
+                      var rutsInvalidos = [];
+                      var fechaRegexp = new RegExp(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                  
+                      fieldsets.forEach(function(fieldset) {
+                          var rut = null;
+                          var fecha = null;
 
-        var boletas = result.boletas;
-        var invalidos = result.invalidos;
+                          fieldset.querySelectorAll('.txt_detalle_boleta').forEach(function(elem){
+                              var val = elem.innerText.trim();
 
-        // consolidar
-        ruts.forEach(function(rut){
-            var impagas = [];
-            var monto = 0;
-            
-            for(var i=0; i < boletas.length; i++) {
-                if (boletas[i]['rut'] == rut) {
-                    impagas.push(boletas[i]['fecha']);
-                    monto += boletas[i]['monto'];
-                }
-            }
-            entradas.push({'rut': rut, 'cantidad': impagas.length, 'fechas': impagas.join(' - '), 'monto': monto});
-        });
+                              if (ruts.indexOf(val) != -1) {
+                                  rut = val;
+                              }
+                              else if(fechaRegexp.test(val)) {
+                                  fecha = val;
+                              }
+                          });
 
-        callback(null, {'entradas': entradas, 'invalidos': invalidos});
-    })
-    .catch(function (error) {
-        console.error('Search failed:', error);
-        callback(error);
-    });
+                          if (rut != null && fecha != null) {
+                              // conseguir monto
+                              var monto = 0;
 
+                              fieldset.querySelectorAll('.txt_detalle_boleta_bold').forEach(function(elem){
+                                var val = elem.innerText.trim();
+                                if (val.indexOf("$") != -1) {
+                                    monto = Number(val.replace(/\D/g,''));
+                                }
+                              });
+
+                              boletasImpagas.push({'rut': rut, 'fecha': fecha, 'monto': monto});
+                          }
+                          else if (rut != null){
+                            // si no encontramos boletas, quizas es invalido
+                            fieldset.querySelectorAll('.txt_detalle_boleta_bold').forEach(function(elem){
+                                var val = elem.innerText.trim();
+                                if (val.indexOf("En estos momentos no es posible obtener la informacion") != -1) {
+                                  rutsInvalidos.push(rut)
+                                }
+                            });
+                          }
+                      });
+
+                      return {'boletas': boletasImpagas, 'invalidos': rutsInvalidos};
+                  }, ruts)
+                  .end()
+                  .then(function (result) {
+                      console.log(result);
+                      var entradas = [];
+                      var boletas = result.boletas;
+                      var invalidos = result.invalidos;
+
+                      // consolidar
+                      ruts.forEach(function(rut){
+                          var impagas = [];
+                          var monto = 0;
+                          
+                          if (invalidos.indexOf(rut) != -1) { return }
+
+                          for(var i=0; i < boletas.length; i++) {
+                              if (boletas[i]['rut'] == rut) {
+                                  impagas.push(boletas[i]['fecha']);
+                                  monto += boletas[i]['monto'];
+                              }
+                          }
+                          entradas.push({'rut': rut, 'cantidad': impagas.length, 'fechas': impagas.join(' - '), 'monto': monto});
+                      });
+
+                      callback(null, {'entradas': entradas, 'invalidos': invalidos});
+                  })
+                  .catch(function (error) {
+                      console.error('Search failed:', error);
+                      callback(error);
+                  });
+        })
 }
