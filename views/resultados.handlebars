@@ -36,15 +36,17 @@
               <tr>
                 <th>RUT</th>
                 <th>Nº boletas impagas</th>
+                <th>¿Al día?</th>
                 <th>Fecha vencimiento</th>
                 <th>Total adeudado</th>
               </tr>
             </thead>
             <tbody>
               {{#entradas}}
-              <tr>
+              <tr {{#if aldia}}class="table-success"{{/if}}>
                 <td>{{rut}}</td>
                 <td>{{cantidad}}</td>
+                <td>{{#if aldia}}Si{{else}}No{{/if}}</td>
                 <td>{{fechas}}</td>
                 <td>{{monto}}</td>
               </tr>

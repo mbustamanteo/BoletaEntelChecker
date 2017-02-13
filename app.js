@@ -26,7 +26,10 @@ app.post('/boletas', function(request, response) {
         return
     }
 
+    // filtrar datos y asegurarse que los ruts son unicos
     ruts = ruts.trim().split(",").filter(function(n) { return (n != null && n.length > 0) });
+    ruts = ruts.filter(function(elem, pos) { return ruts.indexOf(elem) == pos; });
+
     var pedazos = [];
     var tamano = 20;
 
@@ -163,21 +166,34 @@ function getBoletasImpagas(ruts, callback) {
                       var entradas = [];
                       var boletas = result.boletas;
                       var invalidos = result.invalidos;
+  
+                      var hoy = new Date();
 
                       // consolidar
                       ruts.forEach(function(rut){
                           var impagas = [];
                           var monto = 0;
+                          var aldia = true;
                           
                           if (invalidos.indexOf(rut) != -1) { return }
 
                           for(var i=0; i < boletas.length; i++) {
                               if (boletas[i]['rut'] == rut) {
+                                  var parts = boletas[i]['fecha'].split('/');
+                                  var vencimiento = new Date(parts[2], parts[1] - 1, parts[0]);
+                                  aldia = aldia && vencimiento > hoy
+
                                   impagas.push(boletas[i]['fecha']);
                                   monto += boletas[i]['monto'];
                               }
                           }
-                          entradas.push({'rut': rut, 'cantidad': impagas.length, 'fechas': impagas.join(' - '), 'monto': monto});
+                          entradas.push({
+                            'rut': rut, 
+                            'cantidad': impagas.length, 
+                            'fechas': impagas.join(' - '), 
+                            'monto': monto, 
+                            'aldia': aldia
+                          });
                       });
 
                       callback(null, {'entradas': entradas, 'invalidos': invalidos});
