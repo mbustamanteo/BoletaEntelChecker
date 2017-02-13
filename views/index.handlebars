@@ -1,17 +1,28 @@
 <div class="container">
     <div class="row"> 
         <div class="col-md-6 offset-md-3">
+            <br /> <br />
             <h3>Boletas Entel</h3>
             <p>Formulario que consulta en Servipag las boletas impagas que aparecen para el servicio TV Satelital y la empresa Entel Hogar.</p> 
             <form action="/boletas" method="POST" id="form_ruts">
                 <div class="form-group">
                     
-                    <label for="ruts">Escribir ruts, sin puntos ni guión, separados por coma. Ejemplo: 51093674,79795054.</label>
-                    <textarea class="form-control" name="ruts"></textarea>
+                    <label for="ruts"></label>
+                    <textarea class="form-control" name="ruts" rows="10"></textarea>
                     <br />
                     <button type="submit" class="btn btn-primary">Ingresar</button>
                 </div>
             </form>
+
+            <hr />
+            <p><b>Instrucciones:</b> Escribir ruts sin puntos ni guión y separados por coma.
+                    Ejemplo: "51093674,79795054" sin comillas. 
+                    Ruts inválidos serán igualmente procesados.<br /> <br/>
+                <b>Nota:</b> Si el formulario falla, quizás ingresas muchos ruts a la vez. 
+                    Funciona con 90 ruts y pueden ingresarse aún más, pero depende mucho de los 
+                    servidores de Servipag y a veces ellos tienen problemas. 
+                    Si ocurre algun error, intenta en un par de minutos con menor cantidad de ruts.
+            </p>
         </div>
     </div>    
 </div>

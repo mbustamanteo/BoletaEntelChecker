@@ -1,13 +1,43 @@
 <div class="container">
+    {{#if hayinvalidos}}
+    <div class="row"> 
+        <div class="col-md-6 offset-md-3">
+          <div class="alert alert-warning" role="alert">
+            <strong>Ojo!</strong> Ruts que no fue posible conseguir informacion:
+          </div>
+          <table class="table">
+            <thead class="thead-default">
+              <tr>
+                <th>RUT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#invalidos}}
+              <tr>
+                <td>{{this}}</td>
+              </tr>
+              {{/invalidos}}
+            </tbody>
+          </table>
+        </div>
+    </div>
+    <hr />
+    {{/if}}
     <div class="row"> 
         <div class="col-md-6 offset-md-3">
 
-          <table class="table">
+          <div style="text-align: center;">
+            <button type="button" class="btn btn-primary" download="boletasentel.csv" href="#" onclick="return ExcellentExport.csv(this, 'tabla-boletas');">Exportar tabla a CSV</button>
+            <button type="button" class="btn btn-success" download="boletasentel.xls" href="#" onclick="return ExcellentExport.excel(this, 'tabla-boletas', 'Datos');">Exportar tabla a Excel</button>
+          </div>
+          <br />
+          <table id="tabla-boletas" class="table">
             <thead class="thead-default">
               <tr>
                 <th>RUT</th>
                 <th>Nº boletas impagas</th>
                 <th>Fecha vencimiento</th>
+                <th>Total adeudado</th>
               </tr>
             </thead>
             <tbody>
@@ -16,6 +46,7 @@
                 <td>{{rut}}</td>
                 <td>{{cantidad}}</td>
                 <td>{{fechas}}</td>
+                <td>{{monto}}</td>
               </tr>
               {{/entradas}}
             </tbody>
